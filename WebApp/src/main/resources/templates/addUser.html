@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Add User</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+          integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+          crossorigin="anonymous">
+    <link rel="stylesheet"
+          href="https://use.fontawesome.com/releases/v5.4.1/css/all.css"
+          integrity="sha384-5sAR7xN1Nv6T6+dT2mhtzEpVJvfS3NScPQTrOxhwjIuvcA67KV2R5Jz6kr4abQsz"
+          crossorigin="anonymous">
+</head>
+
+<body>
+<div class="container my-5">
+    <h3> Add New User</h3>
+    <div class="card">
+        <div class="card-body">
+            <div class="col-md-10">
+                <form action="#" th:action="@{/users/save}"
+                      th:object="${userAdd}" method="post">
+                    <input type="hidden" th:field="*{id}" />
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="icNum" class="col-form-label">New IC Number</label>
+                                <input type="text" th:field="*{icNum}" class="form-control"
+                                       required minlength="14" maxlength="14"
+                                       id="icNum" placeholder="IC Number (e.g., 010203-04-5678)"
+                                       pattern="^\d{6}-\d{2}-\d{4}$"
+                                       title="Please enter a valid IC Number in the format XXXXXX-XX-XXXX (e.g., 010203-04-5678)">
+                                <span th:if="${#fields.hasErrors('icNum')}" th:errors="*{icNum}"
+                                      class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="gender" class="col-form-label">Gender</label>
+                                <select th:field="*{gender}" class="form-control" id="gender">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                                <span th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}"
+                                      class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="postcode" class="col-form-label">Postcode</label>
+                                <input type="text" th:field="*{postcode}" class="form-control" id="postcode"
+                                       placeholder="Postcode">
+                                <span th:if="${#fields.hasErrors('postcode')}" th:errors="*{postcode}"
+                                      class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="dob" class="col-form-label">Date of Birth</label>
+                                <input type="date" th:field="*{dob}" class="form-control" id="dob"
+                                       placeholder="Date of Birth">
+                                <span th:if="${#fields.hasErrors('dob')}" th:errors="*{dob}"
+                                      class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="town" class="col-form-label">Town</label>
+                                <input type="text" th:field="*{town}" class="form-control" id="town"
+                                       placeholder="Town">
+                                <span th:if="${#fields.hasErrors('town')}" th:errors="*{town}"
+                                      class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 text-center">
+                            <input type="submit" class="btn btn-primary m-2" value="Save">
+                            <button type="button" class="btn btn-secondary m-2" onclick="cancelForm()">Cancel</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" th:inline="javascript">
+    function cancelForm() {
+        window.location.href = /*[[@{/users}]]*/ "";
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const icNumField = document.getElementById('icNum');
+        const dobField = document.getElementById('dob');
+        const postcodeField = document.getElementById('postcode');
+        const townField = document.getElementById('town');
+
+        const updateDobFromIc = () => {
+            const icNum = icNumField.value;
+            if (icNum.length >= 6) {
+                const dobPart = icNum.substring(0, 6);
+                try {
+                    const yearPart = parseInt(dobPart.substring(0, 2));
+                    const monthPart = dobPart.substring(2, 4);
+                    const dayPart = dobPart.substring(4, 6);
+                    let fullYear;
+                    const currentYearLastTwoDigits = new Date().getFullYear() % 100;
+                    if (yearPart <= currentYearLastTwoDigits) {
+                        fullYear = "20" + String(yearPart).padStart(2, '0');
+                    } else {
+                        fullYear = "19" + String(yearPart).padStart(2, '0');
+                    }
+                    const month = parseInt(monthPart);
+                    const day = parseInt(dayPart);
+                    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                        dobField.value = `${fullYear}-${monthPart}-${dayPart}`;
+                    } else {
+                        dobField.value = '';
+                    }
+                } catch (e) {
+                    dobField.value = '';
+                    console.error("Error parsing IC for DOB:", e);
+                }
+            } else {
+                dobField.value = ''; // Clear if IC num is too short
+            }
+        };
+
+        const updateTownFromPostcode = () => {
+            const postcode = postcodeField.value;
+            console.log("JavaScript: postcodeField.value =", postcode);
+            console.log("JavaScript: postcode.length =", postcode.length);
+
+            if (postcode.length > 0) {
+                const baseUrl = /*[[@{/api/postcode-to-town}]]*/ "";
+
+                const requestUrl = baseUrl + '?postcode=' + postcode;
+                console.log("JavaScript: Constructed Full URL =", requestUrl);
+
+                fetch(requestUrl)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data && data.town) {
+                            townField.value = data.town;
+                        } else {
+                            townField.value = '';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching town for postcode:', error);
+                        townField.value = '';
+                    });
+            } else {
+                townField.value = ''; // Clear if postcode is empty
+                console.log("JavaScript: Postcode is empty, not making fetch call.");
+            }
+        };
+
+        icNumField.addEventListener('input', updateDobFromIc);
+        postcodeField.addEventListener('change', updateTownFromPostcode);
+
+        updateDobFromIc();
+        updateTownFromPostcode();
+    });
+</script>
+</body>
+</html>
